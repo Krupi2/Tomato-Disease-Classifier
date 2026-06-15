@@ -1,0 +1,21 @@
+# Ignorujemy środowiska wirtualne
+.venv/
+.venv1/
+venv/
+env/
+
+# Ignorujemy cache i pliki tymczasowe
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Ignorujemy pliki PyTorch (używamy tylko ONNX w kontenerze)
+*.pth
+*.pt
+
+# Ignorujemy pliki z danymi i ukryte foldery Git
+.git/
+.vscode/
+.idea/
+*.md
+.gitattributes

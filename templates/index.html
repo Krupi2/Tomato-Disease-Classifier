@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tomato Doctor AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+
+    <header class="bg-green-600 text-white shadow-lg py-6">
+        <div class="max-w-4xl mx-auto px-4 flex items-center justify-center">
+            <i class="fa-solid fa-leaf text-3xl mr-3"></i>
+            <h1 class="text-3xl font-bold tracking-wide">Tomato Doctor AI</h1>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-10">
+        <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-semibold text-gray-700">Zdiagnozuj swoją roślinę</h2>
+                <p class="text-gray-500 mt-2">Wgraj zdjęcie liścia pomidora, a nasz zoptymalizowany model ONNX rozpozna chorobę w ułamku sekundy.</p>
+            </div>
+
+            <div class="flex flex-col items-center justify-center w-full relative">
+                <label id="dropzone-area" for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-green-300 border-dashed rounded-xl cursor-pointer bg-green-50 hover:bg-green-100 transition-all duration-300 ease-in-out">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6 text-green-600 pointer-events-none">
+                        <i class="fa-solid fa-cloud-arrow-up text-5xl mb-3"></i>
+                        <p class="mb-2 text-sm font-semibold">Kliknij lub upuść zdjęcie tutaj</p>
+                        <p class="text-xs text-green-500">PNG, JPG lub JPEG</p>
+                    </div>
+                    <input id="dropzone-file" type="file" class="hidden" accept="image/png, image/jpeg, image/jpg" onchange="handleFileInput(event)" />
+                </label>
+            </div>
+
+            <div id="image-preview-container" class="hidden mt-6 flex justify-center">
+                <img id="image-preview" class="max-h-64 rounded-lg shadow-md object-cover border-4 border-white" src="" alt="Podgląd">
+            </div>
+
+            <div id="loading" class="hidden mt-8 flex flex-col items-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-green-600"></div>
+                <p class="mt-3 text-gray-600 font-medium">Model ONNX analizuje obraz...</p>
+            </div>
+
+            <div id="result-container" class="hidden mt-8 transition-all duration-500 transform scale-95 opacity-0">
+                <div id="result-box" class="rounded-xl p-6 text-center shadow-inner border-2">
+                    <h3 class="text-lg text-gray-600 mb-1">Wynik analizy:</h3>
+                    <p id="disease-name" class="text-3xl font-bold mb-2 capitalize"></p>
+                    <p class="text-gray-600">Pewność modelu: <span id="confidence" class="font-bold text-lg"></span></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 1. Obsługa Drag & Drop
+        const dropzone = document.getElementById('dropzone-area');
+
+        // Podświetl strefę, gdy użytkownik najeżdża plikiem
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('bg-green-50', 'border-green-300');
+            dropzone.classList.add('bg-green-200', 'border-green-500', 'scale-105');
+        });
+
+        // Wróć do normy, gdy plik opuści strefę
+        dropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('bg-green-200', 'border-green-500', 'scale-105');
+            dropzone.classList.add('bg-green-50', 'border-green-300');
+        });
+
+        // Obsługa upuszczenia pliku
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('bg-green-200', 'border-green-500', 'scale-105');
+            dropzone.classList.add('bg-green-50', 'border-green-300');
+            
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                processFile(e.dataTransfer.files[0]); 
+            }
+        });
+
+        // 2. Obsługa tradycyjnego kliknięcia w przycisk
+        function handleFileInput(event) {
+            const file = event.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        // 3. Główna funkcja wysyłająca obraz do FastAPI
+        async function processFile(file) {
+            // Pokaż podgląd zdjęcia
+            const previewContainer = document.getElementById('image-preview-container');
+            const previewImage = document.getElementById('image-preview');
+            previewImage.src = URL.createObjectURL(file);
+            previewContainer.classList.remove('hidden');
+
+            // Ukryj stary wynik i pokaż ładowanie
+            const resultContainer = document.getElementById('result-container');
+            const loading = document.getElementById('loading');
+            resultContainer.classList.add('hidden', 'scale-95', 'opacity-0');
+            loading.classList.remove('hidden');
+
+            // Wysłanie do API
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) throw new Error("Błąd podczas analizy");
+                const data = await response.json();
+
+                // Obsługa interfejsu po otrzymaniu wyniku
+                loading.classList.add('hidden');
+                
+                const resultBox = document.getElementById('result-box');
+                const diseaseNameEl = document.getElementById('disease-name');
+                const confidenceEl = document.getElementById('confidence');
+
+                // Formatowanie nazwy
+                let cleanName = data.disease_name.replace(/_/g, ' ');
+                diseaseNameEl.innerText = cleanName;
+                confidenceEl.innerText = data.confidence;
+
+                // Kolorystyka
+                if (data.disease_name.toLowerCase() === 'healthy') {
+                    resultBox.className = "rounded-xl p-6 text-center shadow-inner border-2 border-green-400 bg-green-50";
+                    diseaseNameEl.classList.add('text-green-700');
+                    diseaseNameEl.classList.remove('text-red-700');
+                } else {
+                    resultBox.className = "rounded-xl p-6 text-center shadow-inner border-2 border-red-400 bg-red-50";
+                    diseaseNameEl.classList.add('text-red-700');
+                    diseaseNameEl.classList.remove('text-green-700');
+                }
+
+                // Animacja
+                resultContainer.classList.remove('hidden');
+                setTimeout(() => {
+                    resultContainer.classList.remove('scale-95', 'opacity-0');
+                    resultContainer.classList.add('scale-100', 'opacity-100');
+                }, 50);
+
+            } catch (error) {
+                loading.classList.add('hidden');
+                alert("Wystąpił błąd podczas komunikacji z serwerem.");
+            }
+        }
+    </script>
+</body>
+</html>
