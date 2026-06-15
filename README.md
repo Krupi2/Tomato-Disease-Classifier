@@ -25,8 +25,8 @@ Aby uniezależnić aplikację od biblioteki PyTorch i znacząco obniżyć czas p
 Zgodność predykcji PyTorch vs. ONNX Runtime została zweryfikowana - uzyskano **100% zgodności** wyników.
 
 **Testy wydajności (Średni czas inferencji ze 200 prób na procesorze CPU):**
-* 🐢 **PyTorch CPU:** ~21.34 ms / obraz
-* ⚡ **ONNX Runtime CPU:** ~9.83 ms / obraz
+* **PyTorch CPU:** ~21.34 ms / obraz
+* **ONNX Runtime CPU:** ~9.83 ms / obraz
 
 > **Wniosek:** Format ONNX przyspieszył działanie modelu **2.17-krotnie**, bez żadnej straty na jakości predykcji, co czyni go idealnym wyborem do wdrożeń chmurowych opartych o tańsze serwery CPU.
 
@@ -41,23 +41,23 @@ Aplikacja serwerowa została napisana w języku Python z użyciem:
 
 W repozytorium znajdują się następujące pliki, z których każdy pełni określoną rolę w cyklu życia modelu:
 
-* 🧠 **Trenowanie i Optymalizacja:**
+* **Trenowanie i Optymalizacja:**
   * `train.py` / `train_finetune.py` - Skrypty w języku Python oparte na bibliotece PyTorch, wykorzystane do przeprowadzenia procesu Transfer Learningu oraz Fine-Tuningu modelu na bazowym zbiorze danych.
   * `onnx_pipeline.py` - Skrypt odpowiadający za eksport wytrenowanych wag modelu do formatu `.onnx`. Dodatkowo weryfikuje zgodność wyników (PyTorch vs ONNX) i mierzy wydajność (czas inferencji na CPU).
   * `tomato_model.onnx` - Gotowy, zoptymalizowany model sieci neuronowej w uniwersalnym formacie ONNX, wykorzystywany przez aplikację webową.
 
-* 🌐 **Aplikacja Webowa:**
+* **Aplikacja Webowa:**
   * `main.py` - Główny plik serwera napisany z użyciem FastAPI. Definiuje endpointy API, wczytuje sesję `onnxruntime` i przetwarza nadsyłane przez użytkowników obrazy.
   * `templates/index.html` - Plik frontendowy oparty na szablonach Jinja2. Zawiera responsywny interfejs użytkownika zrealizowany przy pomocy Tailwind CSS z napisaną w JavaScript obsługą funkcji Drag & Drop.
 
-* 🐳 **Wdrożenie (Docker):**
+* **Wdrożenie (Docker):**
   * `Dockerfile` - Instrukcja budowy kontenera. Definiuje bazowy system (Python 3.11-slim) oraz kroki niezbędne do uruchomienia aplikacji w izolowanym środowisku.
   * `.dockerignore` - Lista ignorowanych plików (takich jak wirtualne środowiska `.venv` czy surowe pliki `.pth`), co pozwala zachować mały rozmiar obrazu platformy Docker.
   * `requirements.txt` - Zablokowana lista niezbędnych zależności i bibliotek w języku Python.
   * `build.bat` & `run.bat` - Skrypty automatyzujące budowanie i uruchamianie kontenera dla systemu Windows.
   * `build.sh` & `run.sh` - Skrypty automatyzujące budowanie i uruchamianie kontenera dla środowisk Linux / macOS.
 
-## ⚙️ Instrukcja Uruchomienia (Docker)
+## Instrukcja Uruchomienia (Docker)
 
 Projekt jest całkowicie zautomatyzowany. Nie musisz instalować Pythona ani bibliotek na swoim komputerze, wystarczy samo narzędzie **Docker**.
 
