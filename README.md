@@ -22,7 +22,7 @@ W projekcie wykorzystano architekturę **ResNet18**. Proces uczenia podzielono n
 ## 4. Optymalizacja i Eksport do ONNX
 Aby uniezależnić aplikację od biblioteki PyTorch i znacząco obniżyć czas predykcji, wytrenowane wagi (`.pth`) zostały wyeksportowane do uniwersalnego formatu **ONNX** (Open Neural Network Exchange).
 
-Zgodność predykcji PyTorch vs. ONNX Runtime została zweryfikowana – uzyskano **100% zgodności** wyników (z dokładnością do błędów zmiennoprzecinkowych `1e-05`).
+Zgodność predykcji PyTorch vs. ONNX Runtime została zweryfikowana - uzyskano **100% zgodności** wyników.
 
 **Testy wydajności (Średni czas inferencji ze 200 prób na procesorze CPU):**
 * 🐢 **PyTorch CPU:** ~21.34 ms / obraz
@@ -37,7 +37,25 @@ Aplikacja serwerowa została napisana w języku Python z użyciem:
 * **Jinja2 & Tailwind CSS:** Wygenerowanie nowoczesnego, responsywnego interfejsu graficznego (Drag & Drop) bez konieczności tworzenia osobnego projektu frontendowego.
 * **Docker:** Całość działa na obrazie `python:3.11-slim`.
 
----
+## 6. Struktura Projektu (Opis Plików)
+
+W repozytorium znajdują się następujące pliki, z których każdy pełni określoną rolę w cyklu życia modelu:
+
+* 🧠 **Trenowanie i Optymalizacja:**
+  * `train.py` / `train_finetune.py` - Skrypty w języku Python oparte na bibliotece PyTorch, wykorzystane do przeprowadzenia procesu Transfer Learningu oraz Fine-Tuningu modelu na bazowym zbiorze danych.
+  * `onnx_pipeline.py` - Skrypt odpowiadający za eksport wytrenowanych wag modelu do formatu `.onnx`. Dodatkowo weryfikuje zgodność wyników (PyTorch vs ONNX) i mierzy wydajność (czas inferencji na CPU).
+  * `tomato_model.onnx` - Gotowy, zoptymalizowany model sieci neuronowej w uniwersalnym formacie ONNX, wykorzystywany przez aplikację webową.
+
+* 🌐 **Aplikacja Webowa:**
+  * `main.py` - Główny plik serwera napisany z użyciem FastAPI. Definiuje endpointy API, wczytuje sesję `onnxruntime` i przetwarza nadsyłane przez użytkowników obrazy.
+  * `templates/index.html` - Plik frontendowy oparty na szablonach Jinja2. Zawiera responsywny interfejs użytkownika zrealizowany przy pomocy Tailwind CSS z napisaną w JavaScript obsługą funkcji Drag & Drop.
+
+* 🐳 **Wdrożenie (Docker):**
+  * `Dockerfile` - Instrukcja budowy kontenera. Definiuje bazowy system (Python 3.11-slim) oraz kroki niezbędne do uruchomienia aplikacji w izolowanym środowisku.
+  * `.dockerignore` - Lista ignorowanych plików (takich jak wirtualne środowiska `.venv` czy surowe pliki `.pth`), co pozwala zachować mały rozmiar obrazu platformy Docker.
+  * `requirements.txt` - Zablokowana lista niezbędnych zależności i bibliotek w języku Python.
+  * `build.bat` & `run.bat` - Skrypty automatyzujące budowanie i uruchamianie kontenera dla systemu Windows.
+  * `build.sh` & `run.sh` - Skrypty automatyzujące budowanie i uruchamianie kontenera dla środowisk Linux / macOS.
 
 ## ⚙️ Instrukcja Uruchomienia (Docker)
 
